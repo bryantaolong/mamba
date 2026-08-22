@@ -33,7 +33,7 @@ public:
 
     void add_command(const Command& command);
     Command* get_command(const std::string& name);
-    void execute(const std::string& name);
+    bool execute(const std::string& name);
 
 private:
     std::map<std::string, Command> commands_;

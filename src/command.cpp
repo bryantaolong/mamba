@@ -29,11 +29,13 @@ Command* CommandRegistry::get_command(const std::string& name) {
     return nullptr;
 }
 
-void CommandRegistry::execute(const std::string& name) {
+bool CommandRegistry::execute(const std::string& name) {
     auto it = commands_.find(name);
-    if (it != commands_.end()) {
-        it->second.execute();
+    if (it == commands_.end()) {
+        return false;
     }
+    it->second.execute();
+    return true;
 }
 
 }  // namespace mamba
