@@ -1,0 +1,83 @@
+build/
+
+# Compiled C++ files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Dependency files
+*.d
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Visual Studio
+.vs/
+Debug/
+Release/
+x64/
+x86/
+Win32/
+Win64/
+ARM/
+ARM64/
+ipch/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.user
+*.userosscache
+*.sln.docstates
+*.exp
+
+# CMake
+CMakeLists.txt.user
+CMakeCache.dir/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Makefile
+CMakeFiles/
+
+# Qt
+*.moc
+*.moc.l
+*.mocp
+*.obj
+*.prl
+*.ui/
+qrc_*.cpp
+
+# CLion
+.idea/
+cmake-build-*/
+
+# Eclipse
+.settings/
+.cproject
+
+# Code::Blocks
+*.cbp
+*.layout
+*.depend
+
+# OS
+.DS_Store
+Thumbs.db
