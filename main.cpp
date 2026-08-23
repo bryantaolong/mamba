@@ -3,9 +3,9 @@
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-    mamba::CommandRegistry& registry = mamba::CommandRegistry::instance();
+    mamba::CommandRegistry& registry = mamba::CommandRegistry::Instance();
 
-    registry.add_command(mamba::Command(
+    registry.AddCommand(mamba::Command(
         "version",
         "Show version information",
         []() { std::cout << "v1.0.0\n"; }
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
         arg = "version";
     }
 
-    if (!registry.execute(arg)) {
+    if (!registry.Execute(arg)) {
         std::cerr << "Unknown command: " << arg << "\n";
         return 1;
     }

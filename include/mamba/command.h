@@ -1,5 +1,5 @@
-#ifndef COMMAND_H
-#define COMMAND_H
+#ifndef MAMBA_COMMAND_H
+#define MAMBA_COMMAND_H
 
 #include <string>
 #include <map>
@@ -16,7 +16,7 @@ public:
     );
     ~Command() = default;
 
-    void execute();
+    void Execute();
 
     const std::string& name() const { return name_; }
     const std::string& description() const { return description_; }
@@ -29,11 +29,11 @@ private:
 
 class CommandRegistry {
 public:
-    static CommandRegistry& instance();
+    static CommandRegistry& Instance();
 
-    void add_command(const Command& command);
-    Command* get_command(const std::string& name);
-    bool execute(const std::string& name);
+    void AddCommand(const Command& command);
+    Command* GetCommand(const std::string& name);
+    bool Execute(const std::string& name);
 
 private:
     std::map<std::string, Command> commands_;
@@ -41,4 +41,4 @@ private:
 
 } // namespace mamba
 
-#endif // COMMAND_H
+#endif // MAMBA_COMMAND_H

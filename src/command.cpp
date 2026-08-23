@@ -8,20 +8,20 @@ Command::Command(std::string name, std::string description, std::function<void()
     action_ = action;
 }
 
-void Command::execute() {
+void Command::Execute() {
     if (action_) action_();
 }
 
-CommandRegistry& CommandRegistry::instance() {
+CommandRegistry& CommandRegistry::Instance() {
     static CommandRegistry instance;
     return instance;
 }
 
-void CommandRegistry::add_command(const Command& command) {
+void CommandRegistry::AddCommand(const Command& command) {
     commands_.emplace(command.name(), command);
 }
     
-Command* CommandRegistry::get_command(const std::string& name) {
+Command* CommandRegistry::GetCommand(const std::string& name) {
     auto it = commands_.find(name);
     if (it != commands_.end()) {
         return &(it->second);
@@ -29,12 +29,12 @@ Command* CommandRegistry::get_command(const std::string& name) {
     return nullptr;
 }
 
-bool CommandRegistry::execute(const std::string& name) {
+bool CommandRegistry::Execute(const std::string& name) {
     auto it = commands_.find(name);
     if (it == commands_.end()) {
         return false;
     }
-    it->second.execute();
+    it->second.Execute();
     return true;
 }
 
