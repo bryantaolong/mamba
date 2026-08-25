@@ -5,11 +5,14 @@
 int main(int argc, char* argv[]) {
     mamba::CommandRegistry& registry = mamba::CommandRegistry::Instance();
 
-    registry.AddCommand(mamba::Command(
+    mamba::Command version_cmd(
         "version",
         "Show version information",
         []() { std::cout << "v1.0.0\n"; }
-    ));
+    );
+    version_cmd.AddAlias("--version");
+    version_cmd.AddAlias("-v");
+    registry.AddCommand(version_cmd);
 
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <command>\n";
@@ -18,20 +21,9 @@ int main(int argc, char* argv[]) {
     }
 
     std::string arg = argv[1];
-    if (arg == "--version" || arg == "-v") {
-        arg = "version";
-    }
 
-    bool describe = registry.Describe(arg);
-    if (!describe) {
-        std::cerr << "Unknown command: " << arg << "\n";
-        return 1;
-    }
-
-    if (!registry.Execute(arg)) {
-        std::cerr << "Unknown command: " << arg << "\n";
-        return 1;
-    }
+    registry.Describe(arg);
+    registry.Execute(arg);
 
     return 0;
 }
