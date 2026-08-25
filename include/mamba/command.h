@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <unordered_set>
 #include <functional>
 
 namespace mamba {
@@ -17,6 +18,7 @@ public:
     ~Command() = default;
 
     void Execute();
+    void AddFlag(const std::string& flag) { flags_.insert(flag); }
 
     const std::string& name() const { return name_; }
     const std::string& description() const { return description_; }
@@ -24,6 +26,7 @@ public:
 private:
     std::string name_;
     std::string description_;
+    std::unordered_set<std::string> flags_;
     std::function<void()> action_;
 };
 
@@ -33,6 +36,7 @@ public:
 
     void AddCommand(const Command& command);
     Command* GetCommand(const std::string& name);
+    void Describe(const std::string& name);
     bool Execute(const std::string& name);
 
 private:

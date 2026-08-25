@@ -1,5 +1,7 @@
 #include "mamba/command.h"
 
+#include <iostream>
+
 namespace mamba {
 
 Command::Command(std::string name, std::string description, std::function<void()> action) {
@@ -9,7 +11,11 @@ Command::Command(std::string name, std::string description, std::function<void()
 }
 
 void Command::Execute() {
-    if (action_) action_();
+    if (!action_) {
+        std::cerr << "No action defined for command: " << name_ << std::endl;
+        return;
+    } 
+    action_();
 }
 
 CommandRegistry& CommandRegistry::Instance() {
@@ -29,12 +35,21 @@ Command* CommandRegistry::GetCommand(const std::string& name) {
     return nullptr;
 }
 
+void CommandRegistry::Describe(const std::string& name) {
+    auto cmd = GetCommand(name);
+    if (!cmd) {
+        std::cerr << "Command not found: " << name << std::endl;
+        return;
+    }
+    std::cout << cmd->description() << std::endl;
+}
+
 bool CommandRegistry::Execute(const std::string& name) {
-    auto it = commands_.find(name);
-    if (it == commands_.end()) {
+    auto cmd = GetCommand(name);
+    if (!cmd) {
         return false;
     }
-    it->second.Execute();
+    cmd->Execute();
     return true;
 }
 

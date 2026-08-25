@@ -1,4 +1,8 @@
+# Build output
+bin/
 build/
+out/
+compile_commands.json
 
 # Compiled C++ files
 *.o
@@ -29,6 +33,7 @@ build/
 
 # Visual Studio
 .vs/
+.vscode/
 Debug/
 Release/
 x64/
@@ -53,8 +58,8 @@ CMakeCache.dir/
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
-Makefile
 CMakeFiles/
+[Cc]Make[Cc]ache.txt
 
 # Qt
 *.moc

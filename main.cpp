@@ -22,6 +22,12 @@ int main(int argc, char* argv[]) {
         arg = "version";
     }
 
+    bool describe = registry.Describe(arg);
+    if (!describe) {
+        std::cerr << "Unknown command: " << arg << "\n";
+        return 1;
+    }
+
     if (!registry.Execute(arg)) {
         std::cerr << "Unknown command: " << arg << "\n";
         return 1;
