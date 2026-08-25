@@ -1,9 +1,10 @@
-#include "mamba/command.h"
-
 #include <iostream>
 
+#include "mamba/mamba.h"
+#include "mamba/command.h"
+
 int main(int argc, char* argv[]) {
-    mamba::CommandRegistry& registry = mamba::CommandRegistry::Instance();
+    mamba::Mamba& mamba = mamba::Mamba::Instance();
 
     mamba::Command version_cmd(
         "version",
@@ -12,7 +13,7 @@ int main(int argc, char* argv[]) {
     );
     version_cmd.AddAlias("--version");
     version_cmd.AddAlias("-v");
-    registry.AddCommand(version_cmd);
+    mamba.AddCommand(version_cmd);
 
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <command>\n";
@@ -22,8 +23,8 @@ int main(int argc, char* argv[]) {
 
     std::string arg = argv[1];
 
-    registry.Describe(arg);
-    registry.Execute(arg);
+    mamba.Describe(arg);
+    mamba.Execute(arg);
 
     return 0;
 }
