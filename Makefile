@@ -1,4 +1,4 @@
-.PHONY: build clean run
+.PHONY: build clean run test
 
 build: build/CMakeCache.txt
 	cmake --build build
@@ -10,4 +10,7 @@ clean:
 	rm -rf build
 
 run: build
-	./build/mamba version
+	./build/mamba_tests version
+
+test: build
+	ctest --output-on-failure
