@@ -20,11 +20,8 @@ int main(int argc, char* argv[]) {
         "add",
         "Add file contents to the index",
         [](const mamba::Command::ParsedArgs& args) {
-            std::optional<std::string> msg = args.GetOption("-m");
-            if (!msg) {
-                msg = args.GetOption("--message");
-            }
-            bool force = args.HasFlag("-f") || args.HasFlag("--force");
+            std::optional<std::string> msg = args.GetOption("--message");
+            bool force = args.HasFlag("--force");
             const auto& files = args.positional();
 
             if (!msg) {

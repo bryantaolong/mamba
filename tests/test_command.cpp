@@ -20,10 +20,10 @@ void Assert(bool cond, const std::string& msg) {
 }  // namespace
 
 int main() {
-    // 1. Basic option parsing (order independent)
+    // 1. Short option input normalizes to long name (query by long name)
     {
         mamba::Command cmd("add", "", [](const mamba::Command::ParsedArgs& args) {
-            if (auto v = args.GetOption("-m")) {
+            if (auto v = args.GetOption("--message")) {
                 std::cout << *v << "\n";
             }
         });
@@ -33,7 +33,7 @@ int main() {
         std::streambuf* old = std::cout.rdbuf(buf.rdbuf());
         cmd.Execute({"-m", "hello"});
         std::cout.rdbuf(old);
-        Assert(buf.str() == "hello\n", "option should be parsed");
+        Assert(buf.str() == "hello\n", "short option should parse and query by long name");
     }
 
     // 2. Long option
@@ -56,7 +56,7 @@ int main() {
     {
         bool flag = false;
         mamba::Command cmd("add", "", [&flag](const mamba::Command::ParsedArgs& args) {
-            flag = args.HasFlag("-f");
+            flag = args.HasFlag("--force");
         });
         cmd.AddFlag("--force", "-f", "force");
 
@@ -135,6 +135,35 @@ int main() {
         std::cout.rdbuf(old);
 
         Assert(buf.str().find("pdfx") != std::string::npos, "help should contain app name");
+    }
+
+    // 9. Missing value: next token is a known option
+    {
+        mamba::Command cmd("add", "", [](const mamba::Command::ParsedArgs&){});
+        cmd.AddOption("--message", "-m", "msg");
+        cmd.AddFlag("--force", "-f", "force");
+
+        std::stringstream buf;
+        std::streambuf* old = std::cerr.rdbuf(buf.rdbuf());
+        cmd.Execute({"-m", "-f"});
+        std::cerr.rdbuf(old);
+
+        Assert(buf.str().find("requires a value") != std::string::npos,
+               "should reject option followed by another known option");
+    }
+
+    // 10. Required check accepts short name registration
+    {
+        mamba::Command cmd("add", "", [](const mamba::Command::ParsedArgs&){});
+        cmd.AddOption("--message", "-m", "msg");
+        cmd.MarkAsRequired("-m");
+
+        std::stringstream buf;
+        std::streambuf* old = std::cerr.rdbuf(buf.rdbuf());
+        cmd.Execute({"-m", "msg"});
+        std::cerr.rdbuf(old);
+
+        Assert(buf.str().empty(), "required check should accept short registered name");
     }
 
     if (failures == 0) {

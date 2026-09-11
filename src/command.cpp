@@ -54,7 +54,7 @@ void Command::Execute(const std::vector<std::string>& args) {
         auto it = options_.find(args[i]);
         if (it != options_.end()) {
             if (it->second.is_flag) {
-                parsed.flags_.insert(args[i]);
+                parsed.flags_.insert(it->second.long_name);
             } else {
                 if (i + 1 < args.size()) {
                     std::string key = args[i];
@@ -63,7 +63,7 @@ void Command::Execute(const std::vector<std::string>& args) {
                         std::cerr << "Error: option " << key << " requires a value\n";
                         return;
                     }
-                    parsed.options_[std::move(key)] = args[i];
+                    parsed.options_[it->second.long_name] = args[i];
                 } else {
                     std::cerr << "Error: option " << args[i] << " requires a value\n";
                     return;
@@ -75,23 +75,15 @@ void Command::Execute(const std::vector<std::string>& args) {
     }
 
     for (const auto& req : required_) {
-        bool found = false;
-        for (const auto& [k, v] : parsed.options_) {
-            auto it2 = options_.find(k);
-            if ((it2 != options_.end() && it2->second.long_name == req) || k == req) {
-                found = true;
-                break;
-            }
+        // Normalize the required name to its canonical long name so the check
+        // is independent of how the requirement was registered or typed.
+        std::string canonical = req;
+        auto req_it = options_.find(req);
+        if (req_it != options_.end()) {
+            canonical = req_it->second.long_name;
         }
-        if (!found) {
-            for (const auto& f : parsed.flags_) {
-                auto it2 = options_.find(f);
-                if ((it2 != options_.end() && it2->second.long_name == req) || f == req) {
-                    found = true;
-                    break;
-                }
-            }
-        }
+
+        bool found = parsed.options_.count(canonical) > 0 || parsed.flags_.count(canonical) > 0;
         if (!found) {
             std::cerr << "Error: missing required option: " << req << "\n";
             return;
