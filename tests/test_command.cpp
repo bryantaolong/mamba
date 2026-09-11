@@ -23,7 +23,9 @@ int main() {
     // 1. Basic option parsing (order independent)
     {
         mamba::Command cmd("add", "", [](const mamba::Command::ParsedArgs& args) {
-            std::cout << args.GetOption("-m") << "\n";
+            if (auto v = args.GetOption("-m")) {
+                std::cout << *v << "\n";
+            }
         });
         cmd.AddOption("--message", "-m", "msg");
 
@@ -37,7 +39,9 @@ int main() {
     // 2. Long option
     {
         mamba::Command cmd("add", "", [](const mamba::Command::ParsedArgs& args) {
-            std::cout << args.GetOption("--message") << "\n";
+            if (auto v = args.GetOption("--message")) {
+                std::cout << *v << "\n";
+            }
         });
         cmd.AddOption("--message", "-m", "msg");
 

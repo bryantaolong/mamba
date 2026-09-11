@@ -61,6 +61,9 @@ CTestTestfile.cmake
 CMakeFiles/
 [Cc]Make[Cc]ache.txt
 
+# Clangd
+.cache/
+
 # Qt
 *.moc
 *.moc.l

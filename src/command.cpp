@@ -11,13 +11,20 @@ Command::Command(std::string name, std::string description, std::function<void(c
     action_ = action;
 }
 
-std::string Command::ParsedArgs::GetOption(const std::string& key, const std::string& default_val) const {
+std::optional<std::string> Command::ParsedArgs::GetOption(const std::string& key, const std::optional<std::string>& default_val) const {
     auto it = options_.find(key);
-    return it != options_.end() ? it->second : default_val;
+    if (it != options_.end()) {
+        return it->second;
+    }
+    return default_val;
 }
 
 bool Command::ParsedArgs::HasFlag(const std::string& flag) const {
     return flags_.count(flag) > 0;
+}
+
+bool Command::ParsedArgs::HasOption(const std::string& key) const {
+    return options_.count(key) > 0;
 }
 
 void Command::AddFlag(const std::string& long_name, const std::string& short_name, const std::string& description) {
@@ -52,6 +59,10 @@ void Command::Execute(const std::vector<std::string>& args) {
                 if (i + 1 < args.size()) {
                     std::string key = args[i];
                     ++i;
+                    if (options_.count(args[i])) {
+                        std::cerr << "Error: option " << key << " requires a value\n";
+                        return;
+                    }
                     parsed.options_[std::move(key)] = args[i];
                 } else {
                     std::cerr << "Error: option " << args[i] << " requires a value\n";
@@ -67,7 +78,7 @@ void Command::Execute(const std::vector<std::string>& args) {
         bool found = false;
         for (const auto& [k, v] : parsed.options_) {
             auto it2 = options_.find(k);
-            if (it2 != options_.end() && it2->second.long_name == req) {
+            if ((it2 != options_.end() && it2->second.long_name == req) || k == req) {
                 found = true;
                 break;
             }
@@ -75,7 +86,7 @@ void Command::Execute(const std::vector<std::string>& args) {
         if (!found) {
             for (const auto& f : parsed.flags_) {
                 auto it2 = options_.find(f);
-                if (it2 != options_.end() && it2->second.long_name == req) {
+                if ((it2 != options_.end() && it2->second.long_name == req) || f == req) {
                     found = true;
                     break;
                 }
@@ -116,4 +127,4 @@ void Command::PrintHelp() const {
     }
 }
 
-}  // namespace mamba
+} // namespace mamba

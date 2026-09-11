@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <functional>
 #include <vector>
+#include <optional>
 
 namespace mamba {
 
@@ -19,8 +20,9 @@ public:
     };
 
     struct ParsedArgs {
-        std::string GetOption(const std::string& key, const std::string& default_val = "") const;
+        std::optional<std::string> GetOption(const std::string& key, const std::optional<std::string>& default_val = std::nullopt) const;
         bool HasFlag(const std::string& flag) const;
+        bool HasOption(const std::string& key) const;
         const std::vector<std::string>& positional() const { return positional_; }
 
     private:

@@ -18,7 +18,7 @@ void Mamba::AddCommand(const Command& command) {
         aliases_[alias] = command.name();
     }
 }
-    
+
 Command* Mamba::GetCommand(const std::string& name) {
     auto it = commands_.find(name);
     if (it != commands_.end()) {
@@ -63,7 +63,7 @@ void Mamba::PrintHelp() const {
     }
     std::cout << "\nFlags:\n";
     std::cout << "  -h, --help    help for " << app_name_ << "\n";
-    
+
     auto alias_it = aliases_.find("--version");
     if (alias_it != aliases_.end() && alias_it->second == "version") {
         auto cmd_it = commands_.find("version");
@@ -71,7 +71,7 @@ void Mamba::PrintHelp() const {
             std::cout << "  -v, --version   " << cmd_it->second.description() << "\n";
         }
     }
-    
+
     std::cout << "\nUse \"" << app_name_ << " [command] --help\" for more information about a command.\n";
 }
 
@@ -132,4 +132,4 @@ void Mamba::Run(int argc, char* argv[]) {
     Execute(cmd, args);
 }
 
-}  // namespace mamba
+} // namespace mamba

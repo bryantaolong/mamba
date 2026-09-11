@@ -4,6 +4,16 @@
 
 以下问题在 1.0.0 之前需要解决。
 
+### 必填校验无法识别短选项别名
+
+- **状态**：已修复
+- **表现**：`MarkAsRequired("--message")` 后，用户传 `-m msg` 仍被报 missing required option。
+- **原因**：`Command::Execute` 只按 `required_` 原始文本匹配，不识别短别名；同时解析阶段会把紧跟选项名的已知选项误当成值，导致空值/漏值绕过。
+- **修复**：
+  - `src/command.cpp`：required 校验同时匹配原始 key 与等效 `long_name`，覆盖短别名；
+  - `src/command.cpp`：解析时若下一个 token 已在 `options_` 中，报 requires a value；
+  - `include/mamba/command.h`：新增 `ParsedArgs::HasOption(key)`，方便业务区分“未设置”与“设置为空”。
+
 ### Option 默认值
 
 - **问题**：`AddOption` 不支持默认值，help 输出也不展示默认值
@@ -18,9 +28,10 @@
 
 ### GetOption 空值语义
 
+- **状态**：已修复
 - **问题**：`GetOption` 用空字符串 `""` 表示"未设置"，但 option 值本身也可能是空字符串
 - **影响**：无法区分 `--msg ""`（传了空值）和没传 `--msg`
-- **方向**：提供 `HasOption(key)` 方法，或返回 `std::optional<std::string>`
+- **修复**：`GetOption` 返回 `std::optional<std::string>`，默认值为 `std::nullopt`；调用方可通过 `HasOption` / optional 真值显式区分“未设置”和“值为空”。
 
 ## 后续版本
 
