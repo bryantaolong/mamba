@@ -16,8 +16,8 @@ public:
 
     void AddCommand(const Command& command);
     Command* GetCommand(const std::string& name);
-    void Execute(const std::string& name, const std::vector<std::string>& args = {});
-    void Run(int argc, char* argv[]);
+    int Execute(const std::string& name, const std::vector<std::string>& args = {});
+    int Run(int argc, char* argv[]);
     void PrintHelp() const;
     void SetAppName(const std::string& name);
 

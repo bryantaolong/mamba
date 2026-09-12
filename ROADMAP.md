@@ -24,19 +24,33 @@
 
 ### Option 默认值
 
+* **状态**：已修复
+
 * **问题**：`AddOption` 不支持默认值，help 输出也不展示默认值
 
 * **影响**：用户无法声明 `--output` 这类带默认值的选项，也无法在 help 中看到 `(default: ...)`
 
-* **方向**：`AddOption` 增加默认值参数，`GetOption` 保持当前行为或提供 `HasOption` 区分"未设置"
+* **修复**：
+
+  * `include/mamba/command.h`：`OptionDef` 新增 `default_val` 字段；`AddOption` 新增带默认值的重载；
+
+  * `src/command.cpp`：`Execute` 将声明的默认值带入 `ParsedArgs::defaults_`（不写入 `options_`，`HasOption` 仍可区分"未设置"与"设置为默认值"）；`GetOption` 按 显式值 → 声明默认值 → 调用方兜底的顺序回退；
+
+  * `src/command.cpp`：`PrintHelp` 对带默认值的选项追加 `(default: ...)` 展示。
 
 ### Action 退出码
+
+* **状态**：已修复
 
 * **问题**：action 签名是 `std::function<void(const ParsedArgs&)>`，无法返回 `int`
 
 * **影响**：CLI 无法通过返回值表达成功/失败状态（如 `return 1;`）
 
-* **方向**：考虑将 action 签名改为返回 `int`，或提供 `SetExitCode` 机制
+* **修复**：
+
+  * `include/mamba/command.h` / `src/command.cpp`：action 签名改为 `std::function<int(const ParsedArgs&)>`；`Command::Execute` 返回 `int`，解析错误（缺值、缺必填项）返回非 0，成功时透传 action 的返回值；
+
+  * `include/mamba/mamba.h` / `src/mamba.cpp`：`Mamba::Execute` 与 `Mamba::Run` 返回 `int` 并逐层透传，`main` 以 `return mamba.Run(argc, argv);` 结束进程。
 
 ### GetOption 空值语义
 

@@ -31,11 +31,11 @@ Command* Mamba::GetCommand(const std::string& name) {
     return nullptr;
 }
 
-void Mamba::Execute(const std::string& name, const std::vector<std::string>& args) {
+int Mamba::Execute(const std::string& name, const std::vector<std::string>& args) {
     auto cmd = GetCommand(name);
     if (!cmd) {
         std::cerr << "Command not found: " << name << std::endl;
-        return;
+        return 1;
     }
 
     bool show_help = false;
@@ -48,9 +48,9 @@ void Mamba::Execute(const std::string& name, const std::vector<std::string>& arg
 
     if (show_help) {
         cmd->PrintHelp();
-        return;
+        return 0;
     }
-    cmd->Execute(args);
+    return cmd->Execute(args);
 }
 
 void Mamba::PrintHelp() const {
@@ -85,25 +85,26 @@ void Mamba::EnsureHelpCommand() {
     Command help_cmd(
         "help",
         "Help about any command",
-        [this](const Command::ParsedArgs& args) {
+        [this](const Command::ParsedArgs& args) -> int {
             const auto& pos = args.positional();
             if (pos.empty()) {
                 PrintHelp();
-                return;
+                return 0;
             }
             std::string cmd_name = pos[0];
             auto* cmd = GetCommand(cmd_name);
             if (!cmd) {
                 std::cerr << "Unknown command: " << cmd_name << "\n";
-                return;
+                return 1;
             }
             cmd->PrintHelp();
+            return 0;
         }
     );
     AddCommand(help_cmd);
 }
 
-void Mamba::Run(int argc, char* argv[]) {
+int Mamba::Run(int argc, char* argv[]) {
     if (argc > 0 && app_name_.empty()) {
         app_name_ = argv[0];
         auto pos = app_name_.find_last_of("\\/");
@@ -119,17 +120,17 @@ void Mamba::Run(int argc, char* argv[]) {
 
     if (argc < 2) {
         PrintHelp();
-        return;
+        return 0;
     }
 
     std::string cmd = argv[1];
     if (cmd == "--help" || cmd == "-h") {
         PrintHelp();
-        return;
+        return 0;
     }
 
     std::vector<std::string> args(argv + 2, argv + argc);
-    Execute(cmd, args);
+    return Execute(cmd, args);
 }
 
 } // namespace mamba
