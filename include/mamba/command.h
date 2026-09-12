@@ -17,6 +17,7 @@ public:
         std::string short_name;
         std::string description;
         bool is_flag = false;
+        std::optional<std::string> default_val;
     };
 
     struct ParsedArgs {
@@ -27,6 +28,7 @@ public:
 
     private:
         std::unordered_map<std::string, std::string> options_;
+        std::unordered_map<std::string, std::string> defaults_;
         std::unordered_set<std::string> flags_;
         std::vector<std::string> positional_;
         friend class Command;
@@ -35,14 +37,14 @@ public:
     explicit Command(
         std::string name,
         std::string description,
-        std::function<void(const ParsedArgs& args)> action
+        std::function<int(const ParsedArgs& args)> action
     );
     ~Command() = default;
 
-    void Execute(const std::vector<std::string>& args);
+    int Execute(const std::vector<std::string>& args);
     void PrintHelp() const;
     void AddFlag(const std::string& long_name, const std::string& short_name = "", const std::string& description = "");
-    void AddOption(const std::string& long_name, const std::string& short_name = "", const std::string& description = "");
+    void AddOption(const std::string& long_name, const std::string& short_name = "", const std::string& description = "", std::optional<std::string> default_val = std::nullopt);
     void MarkAsRequired(const std::string& long_name) { required_.insert(long_name); }
     void AddAlias(const std::string& alias) { aliases_.insert(alias); }
     void AddAliases(std::initializer_list<std::string> aliases) {
@@ -61,7 +63,7 @@ private:
     std::unordered_set<std::string> aliases_;
     std::unordered_map<std::string, OptionDef> options_;
     std::unordered_set<std::string> required_;
-    std::function<void(const ParsedArgs& args)> action_;
+    std::function<int(const ParsedArgs& args)> action_;
 };
 
 } // namespace mamba

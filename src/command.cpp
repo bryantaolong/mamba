@@ -5,7 +5,7 @@
 
 namespace mamba {
 
-Command::Command(std::string name, std::string description, std::function<void(const ParsedArgs& args)> action) {
+Command::Command(std::string name, std::string description, std::function<int(const ParsedArgs& args)> action) {
     name_ = name;
     description_ = description;
     action_ = action;
@@ -15,6 +15,10 @@ std::optional<std::string> Command::ParsedArgs::GetOption(const std::string& key
     auto it = options_.find(key);
     if (it != options_.end()) {
         return it->second;
+    }
+    auto def = defaults_.find(key);
+    if (def != defaults_.end()) {
+        return def->second;
     }
     return default_val;
 }
@@ -35,18 +39,18 @@ void Command::AddFlag(const std::string& long_name, const std::string& short_nam
     }
 }
 
-void Command::AddOption(const std::string& long_name, const std::string& short_name, const std::string& description) {
-    OptionDef def{long_name, short_name, description, false};
+void Command::AddOption(const std::string& long_name, const std::string& short_name, const std::string& description, std::optional<std::string> default_val) {
+    OptionDef def{long_name, short_name, description, false, default_val};
     options_[long_name] = def;
     if (!short_name.empty()) {
         options_[short_name] = def;
     }
 }
 
-void Command::Execute(const std::vector<std::string>& args) {
+int Command::Execute(const std::vector<std::string>& args) {
     if (!action_) {
         std::cerr << "No action defined for command: " << name_ << std::endl;
-        return;
+        return 1;
     }
 
     ParsedArgs parsed;
@@ -61,12 +65,12 @@ void Command::Execute(const std::vector<std::string>& args) {
                     ++i;
                     if (options_.count(args[i])) {
                         std::cerr << "Error: option " << key << " requires a value\n";
-                        return;
+                        return 1;
                     }
                     parsed.options_[it->second.long_name] = args[i];
                 } else {
                     std::cerr << "Error: option " << args[i] << " requires a value\n";
-                    return;
+                    return 1;
                 }
             }
         } else {
@@ -86,11 +90,19 @@ void Command::Execute(const std::vector<std::string>& args) {
         bool found = parsed.options_.count(canonical) > 0 || parsed.flags_.count(canonical) > 0;
         if (!found) {
             std::cerr << "Error: missing required option: " << req << "\n";
-            return;
+            return 1;
         }
     }
 
-    action_(parsed);
+    // Carry declared defaults so GetOption can fall back to them without
+    // polluting HasOption (unset stays distinguishable from set-to-default).
+    for (const auto& [key, def] : options_) {
+        if (def.default_val.has_value()) {
+            parsed.defaults_[def.long_name] = *def.default_val;
+        }
+    }
+
+    return action_(parsed);
 }
 
 void Command::PrintHelp() const {
@@ -114,6 +126,9 @@ void Command::PrintHelp() const {
         std::cout << "  " << std::setw(22) << std::left << names << def.description;
         if (required_.count(def.long_name)) {
             std::cout << " [required]";
+        }
+        if (def.default_val.has_value()) {
+            std::cout << " (default: " << *def.default_val << ")";
         }
         std::cout << "\n";
     }
