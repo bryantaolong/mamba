@@ -5,18 +5,39 @@
 
 namespace mamba {
 
+namespace {
+std::unordered_map<std::string, std::string> BuildShortToLongMap(const std::unordered_map<std::string, mamba::Command::OptionDef>& options) {
+    std::unordered_map<std::string, std::string> short_to_long;
+    for (const auto& [key, def] : options) {
+        if (!def.short_name.empty()) {
+            short_to_long.emplace(def.short_name, def.long_name);
+        }
+    }
+    return short_to_long;
+}
+}  // namespace
+
 Command::Command(std::string name, std::string description, std::function<int(const ParsedArgs& args)> action) {
-    name_ = name;
-    description_ = description;
-    action_ = action;
+    name_ = std::move(name);
+    description_ = std::move(description);
+    action_ = std::move(action);
+}
+
+std::string Command::ParsedArgs::ResolveKey(const std::unordered_map<std::string, std::string>& short_to_long, const std::string& key) {
+    auto it = short_to_long.find(key);
+    if (it != short_to_long.end()) {
+        return it->second;
+    }
+    return key;
 }
 
 std::optional<std::string> Command::ParsedArgs::GetOption(const std::string& key, const std::optional<std::string>& default_val) const {
-    auto it = options_.find(key);
+    auto resolved = ResolveKey(short_to_long_, key);
+    auto it = options_.find(resolved);
     if (it != options_.end()) {
         return it->second;
     }
-    auto def = defaults_.find(key);
+    auto def = defaults_.find(resolved);
     if (def != defaults_.end()) {
         return def->second;
     }
@@ -24,11 +45,11 @@ std::optional<std::string> Command::ParsedArgs::GetOption(const std::string& key
 }
 
 bool Command::ParsedArgs::HasFlag(const std::string& flag) const {
-    return flags_.count(flag) > 0;
+    return flags_.count(ResolveKey(short_to_long_, flag)) > 0;
 }
 
 bool Command::ParsedArgs::HasOption(const std::string& key) const {
-    return options_.count(key) > 0;
+    return options_.count(ResolveKey(short_to_long_, key)) > 0;
 }
 
 void Command::AddFlag(const std::string& long_name, const std::string& short_name, const std::string& description) {
@@ -53,23 +74,27 @@ int Command::Execute(const std::vector<std::string>& args) {
         return 1;
     }
 
+    auto short_to_long = BuildShortToLongMap(options_);
+
     ParsedArgs parsed;
+    parsed.short_to_long_ = short_to_long;
     for (size_t i = 0; i < args.size(); ++i) {
-        auto it = options_.find(args[i]);
+        auto raw_key = args[i];
+        auto key = ParsedArgs::ResolveKey(short_to_long, raw_key);
+        auto it = options_.find(key);
         if (it != options_.end()) {
             if (it->second.is_flag) {
                 parsed.flags_.insert(it->second.long_name);
             } else {
                 if (i + 1 < args.size()) {
-                    std::string key = args[i];
                     ++i;
-                    if (options_.count(args[i])) {
-                        std::cerr << "Error: option " << key << " requires a value\n";
+                    if (options_.count(ParsedArgs::ResolveKey(short_to_long, args[i]))) {
+                        std::cerr << "Error: option " << raw_key << " requires a value\n";
                         return 1;
                     }
                     parsed.options_[it->second.long_name] = args[i];
                 } else {
-                    std::cerr << "Error: option " << args[i] << " requires a value\n";
+                    std::cerr << "Error: option " << raw_key << " requires a value\n";
                     return 1;
                 }
             }
@@ -79,10 +104,8 @@ int Command::Execute(const std::vector<std::string>& args) {
     }
 
     for (const auto& req : required_) {
-        // Normalize the required name to its canonical long name so the check
-        // is independent of how the requirement was registered or typed.
-        std::string canonical = req;
-        auto req_it = options_.find(req);
+        std::string canonical = ParsedArgs::ResolveKey(short_to_long, req);
+        auto req_it = options_.find(canonical);
         if (req_it != options_.end()) {
             canonical = req_it->second.long_name;
         }
@@ -94,8 +117,6 @@ int Command::Execute(const std::vector<std::string>& args) {
         }
     }
 
-    // Carry declared defaults so GetOption can fall back to them without
-    // polluting HasOption (unset stays distinguishable from set-to-default).
     for (const auto& [key, def] : options_) {
         if (def.default_val.has_value()) {
             parsed.defaults_[def.long_name] = *def.default_val;

@@ -30,7 +30,11 @@ public:
         std::unordered_map<std::string, std::string> options_;
         std::unordered_map<std::string, std::string> defaults_;
         std::unordered_set<std::string> flags_;
+        std::unordered_map<std::string, std::string> short_to_long_;
         std::vector<std::string> positional_;
+
+        static std::string ResolveKey(const std::unordered_map<std::string, std::string>& short_to_long, const std::string& key);
+
         friend class Command;
     };
 
