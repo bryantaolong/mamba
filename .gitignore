@@ -4,15 +4,24 @@ build/
 out/
 compile_commands.json
 
-# Compiled C++ files
-*.o
-*.obj
+# Build output
+bin/
+build/
+out/
+compile_commands.json
+
+# Compiled binaries
 *.exe
 *.dll
 *.so
 *.dylib
 
-# Precompiled Headers
+# Object files and dependency files
+*.o
+*.obj
+*.d
+
+# Precompiled headers
 *.gch
 *.pch
 
@@ -22,69 +31,41 @@ compile_commands.json
 *.la
 *.lo
 
-# Dependency files
-*.d
-
-# Debug files
+# Debug symbols
 *.dSYM/
 *.su
 *.idb
 *.pdb
 
-# Visual Studio
+# IDE — Windows
 .vs/
 .vscode/
-Debug/
-Release/
-x64/
-x86/
-Win32/
-Win64/
-ARM/
-ARM64/
-ipch/
 *.sln
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
-*.user
-*.userosscache
-*.sln.docstates
-*.exp
+*.vcxproj*
+*.user*
 
-# CMake
+# IDE — macOS / Linux
+.idea/
+cmake-build-*/
+.settings/
+.cproject
+*.cbp
+
+# IDE artifacts
+*.exp
+ipch/
+
+# Compiler caches
+[Cc]Make[Cc]ache.txt
 CMakeLists.txt.user
 CMakeCache.dir/
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
 CMakeFiles/
-[Cc]Make[Cc]ache.txt
 
 # Clangd
 .cache/
-
-# Qt
-*.moc
-*.moc.l
-*.mocp
-*.obj
-*.prl
-*.ui/
-qrc_*.cpp
-
-# CLion
-.idea/
-cmake-build-*/
-
-# Eclipse
-.settings/
-.cproject
-
-# Code::Blocks
-*.cbp
-*.layout
-*.depend
 
 # OS
 .DS_Store

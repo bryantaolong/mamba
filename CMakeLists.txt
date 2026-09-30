@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 project(mamba CXX)
 
+# Required early: CMAKE_INSTALL_INCLUDEDIR/LIBDIR are used in
+# target_include_directories and install.cmake
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -11,7 +15,8 @@ add_library(mamba_lib
 )
 
 target_include_directories(mamba_lib PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Integration test / example binary
@@ -31,3 +36,9 @@ add_executable(test_command
 target_link_libraries(test_command PRIVATE mamba_lib)
 
 add_test(NAME CommandTests COMMAND test_command)
+
+# Install targets (only when this is the top-level project, not when used via add_subdirectory)
+option(MAMBA_INSTALL "Install headers and library" ON)
+if(MAMBA_INSTALL AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/install.cmake")
+endif()

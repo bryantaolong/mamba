@@ -1,0 +1,10 @@
+# mamba.pc — relocatable pkg-config file (works with any --prefix)
+prefix=${pcfiledir}/../..
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: mamba
+Description: A lightweight C++ commander library for building CLI applications
+Version: 1.0.0
+Cflags: -I${includedir}
+Libs: -L${libdir} -lmamba_lib

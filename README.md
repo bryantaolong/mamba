@@ -6,6 +6,12 @@ A lightweight C++ commander library for building CLI applications.
 
 - Declarative command registration with `AddOption`, `AddFlag`, `MarkAsRequired`
 - Order-independent argument parsing (short and long options)
+- Option default values (`AddOption` with default, shown as `(default: ...)` in help)
+- Required option validation accepts both long and short names
+- Missing-value detection when next token is another known option
+- `GetOption` returns `std::optional<std::string>` — distinguishes "not set" from empty string
+- `HasOption` to tell whether an option was explicitly provided
+- Exit-code propagation: actions return `int`; `Mamba::Run` returns the same value for the process
 - Auto-generated `--help` / `-h` for every command
 - Auto-generated top-level help and `help [command]` subcommand
 - Command aliases with `AddAlias` and bulk `AddAliases`
@@ -23,19 +29,20 @@ int main(int argc, char* argv[]) {
     mamba::Command add_cmd(
         "add",
         "Add file contents to the index",
-        [](const mamba::Command::ParsedArgs& args) {
-            std::string msg = args.GetOption("-m", args.GetOption("--message"));
+        [](const mamba::Command::ParsedArgs& args) -> int {
+            auto msg = args.GetOption("-m", args.GetOption("--message"));
             bool force = args.HasFlag("-f");
             const auto& files = args.positional();
 
-            if (msg.empty()) {
+            if (!msg || *msg.empty()) {
                 std::cerr << "error: no -m message given\n";
-                return;
+                return 1;
             }
-            std::cout << "message: " << msg << "\n";
+            std::cout << "message: " << *msg << "\n";
             std::cout << "force: " << (force ? "yes" : "no") << "\n";
             for (const auto& f : files) std::cout << " " << f;
             std::cout << "\n";
+            return 0;
         }
     );
 
@@ -48,14 +55,17 @@ int main(int argc, char* argv[]) {
     mamba::Command version_cmd(
         "version",
         "Show version information",
-        [](const mamba::Command::ParsedArgs&) { std::cout << "v1.0.0\n"; }
+        [](const mamba::Command::ParsedArgs&) -> int {
+            std::cout << "v1.0.0\n";
+            return 0;
+        }
     );
     version_cmd.AddAlias("--version");
     version_cmd.AddAlias("-v");
     mamba.AddCommand(version_cmd);
 
     mamba.SetAppName("pdfx");
-    mamba.Run(argc, argv);
+    return mamba.Run(argc, argv);
 }
 ```
 
@@ -80,7 +90,8 @@ $ pdfx add file1 -m "fix bug" --force
 | Method | Description |
 |---|---|
 | `AddCommand(const Command&)` | Register a command |
-| `Run(int argc, char* argv[])` | Parse argv and dispatch |
+| `Run(int argc, char* argv[])` | Parse argv and dispatch; returns action's exit code |
+| `Execute(const std::string&, const std::vector<std::string>&)` | Dispatch a named command; returns int |
 | `PrintHelp() const` | Print top-level help |
 | `SetAppName(const std::string&)` | Set display name for help output |
 
@@ -98,9 +109,10 @@ $ pdfx add file1 -m "fix bug" --force
 
 | Method | Description |
 |---|---|
-| `GetOption(key, default)` | Get option value by long or short name |
+| `GetOption(key, default = nullopt)` | Get option value by long or short name; returns `std::optional<std::string>` |
+| `HasOption(key)` | Whether the option was explicitly provided |
 | `HasFlag(flag)` | Check if a flag is present |
-| `positional()` | Get remaining positional arguments |
+| `positional()` | Remaining positional arguments |
 
 ## Build
 
@@ -113,6 +125,33 @@ cmake --build build
 
 ```bash
 ctest --test-dir build --output-on-failure
+```
+
+## Install
+
+Installs the headers, static library, and CMake/pkg-config config files so other
+projects can link against mamba via `find_package`.
+
+```bash
+cmake -B build
+cmake --build build
+# Install to a custom prefix (dry-run safe, does not touch system dirs)
+cmake --install build --prefix ~/.local
+# Or system-wide on Linux/macOS (headers -> /usr/include, lib -> /usr/lib)
+sudo cmake --install build --prefix /
+```
+
+Use it in a consumer project:
+
+```cmake
+find_package(mamba 1.0 REQUIRED)
+target_link_libraries(myapp PRIVATE mamba::mamba)
+```
+
+Or via pkg-config:
+
+```bash
+g++ main.cpp $(pkg-config --cflags --libs mamba) -o myapp
 ```
 
 ## License
